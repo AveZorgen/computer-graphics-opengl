@@ -2,7 +2,7 @@
 #https://github.com/Shot511/OpenGLSampleCmake
 
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
-project(OpenGLExample)
+project(OpenGLLab)
 
 # Add .lib files
 link_directories(${CMAKE_SOURCE_DIR}/lib)
