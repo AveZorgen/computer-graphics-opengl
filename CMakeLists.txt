@@ -1,5 +1,5 @@
 # Copyright (C) 2018 Tomasz Gałaj
-#https://github.com/Shot511/OpenGLSampleCmake
+# https://github.com/Shot511/OpenGLSampleCmake
 
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(OpenGLLab)
@@ -36,8 +36,8 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
 # GLM
-# find_package(GLM REQUIRED)
-# message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
+find_package(GLM REQUIRED)
+message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 
 # GLFW
 find_package(GLFW3 REQUIRED)
@@ -52,11 +52,10 @@ message(STATUS "Found GLEW in ${GLEW_INCLUDE_DIR}")
 # message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
 
 # STB_IMAGE
-# add_library(STB_IMAGE "thirdparty/stb_image.cpp")
+add_library(STB_IMAGE "thirdparty/stb_image.cpp")
 
 # GLAD
 add_library(GLAD "thirdparty/glad.c")
-add_library(STB_IMAGE "thirdparty/stb_image.c")
 
 # Put all libraries into a variable
 set(LIBS ${GLFW3_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} GLAD STB_IMAGE ${CMAKE_DL_LIBS} )#${ASSIMP_LIBRARY} STB_IMAGE)
