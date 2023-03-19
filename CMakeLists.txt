@@ -18,7 +18,7 @@ file(GLOB_RECURSE HEADER_FILES
 	${CMAKE_SOURCE_DIR}/src/*.hpp)
 
 # Configure assets header file
-# configure_file(src/helpers/RootDir.h.in src/helpers/RootDir.h)
+configure_file(src/helpers/RootDir.h.in src/helpers/RootDir.h)
 include_directories(${CMAKE_BINARY_DIR}/src)
 	
 # Define the executable
@@ -48,8 +48,8 @@ find_package(GLEW REQUIRED)
 message(STATUS "Found GLEW in ${GLEW_INCLUDE_DIR}")
 
 # ASSIMP
-# find_package(ASSIMP REQUIRED)
-# message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
+find_package(ASSIMP REQUIRED)
+message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
 
 # STB_IMAGE
 add_library(STB_IMAGE "thirdparty/stb_image.cpp")
@@ -58,14 +58,14 @@ add_library(STB_IMAGE "thirdparty/stb_image.cpp")
 add_library(GLAD "thirdparty/glad.c")
 
 # Put all libraries into a variable
-set(LIBS ${GLFW3_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} GLAD STB_IMAGE ${CMAKE_DL_LIBS} )#${ASSIMP_LIBRARY} STB_IMAGE)
+set(LIBS ${GLFW3_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} GLAD ${CMAKE_DL_LIBS} ${ASSIMP_LIBRARY} STB_IMAGE)
 
 # Define the include DIRs
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
 	"${CMAKE_SOURCE_DIR}/include"
 	"${CMAKE_SOURCE_DIR}/include/glad"
-	# "${CMAKE_SOURCE_DIR}/include/glm"
+	"${CMAKE_SOURCE_DIR}/include/glm"
 )
 
 # Define the link libraries
@@ -93,9 +93,9 @@ if(MSVC_IDE)
 endif()
 
 # Copy dlls
-# if(WIN32)
-# 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-# 		COMMAND ${CMAKE_COMMAND} -E copy_directory
-# 		"${PROJECT_SOURCE_DIR}/dlls"
-# 		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
-# endif()
+if(WIN32)
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${PROJECT_SOURCE_DIR}/dlls"
+		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
+endif()
