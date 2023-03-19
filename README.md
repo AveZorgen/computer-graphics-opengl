@@ -2,6 +2,8 @@
 ### Build instructions
 ```
 mkdir build
-cd build
-cmake -G "Visual Studio 17" ..
+cmake -S . -B .\build\
+cmake --build .\build\ --config Debug --target ALL_BUILD
 ```
+### Dependencies
+pre-built x64 libraries: glfw, glew, assimp 
