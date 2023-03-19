@@ -13,11 +13,12 @@
 #include "camera.h"
 #include "helpers/RootDir.h"
 
+// #include "snake.h"
+
 #include <iostream>
 #include <vector>
 
 // #define SKELETON
-#define SNAKE
 
 using namespace std;
 
@@ -59,90 +60,8 @@ Light light = {
     0.0019f
 };
 
-#ifdef SNAKE
-const int WIDTH = 20;
-const int HEIGHT = 20;
-
-glm::vec2 food;
-glm::vec2 snake[100];
-int snake_size = 5;
-int score = 0;
-bool game_over = false;
-bool key_table[] = {false, false, false, false};
-
-
-
-void snake_init()
-{
-    food.x = rand() % (WIDTH - 2) + 1;
-    food.y = rand() % (HEIGHT - 2) + 1;
-    // std::cout << glm::to_string(food) << " " << game_over << std::endl;
-
-    // Initialize the snake
-    snake[0].x = WIDTH / 2;
-    snake[0].y = HEIGHT / 2;
-    for (int i = 1; i < snake_size; i++)
-    {
-        snake[i].x = snake[0].x + i;
-        snake[i].y = snake[0].y;
-    }
-}
-
-
-
-void snake_update(Camera_Movement direction)
-{
-    // cout << "ok?" << endl;
-    // std::cout << glm::to_string(snake[0]) << std::endl;
-
-    // Move the snake
-    for (int i = snake_size - 1; i > 0; i--)
-    {
-
-        snake[i] = snake[i-1];
-    }
-    // Change the direction of the snake based on user input
-    switch (direction)
-    {
-    case FORWARD: // Up
-        snake[0].y--;
-        break;
-    case BACKWARD: // Down
-        snake[0].y++;
-        break;
-    case LEFT: // Left
-        snake[0].x--;
-        break;
-    case RIGHT: // Right
-        snake[0].x++;
-        break;
-    }
-    // Check if the snake has collided with the game board walls
-    if (snake[0].x <= 0 || snake[0].x >= WIDTH - 1 || snake[0].y <= 0 || snake[0].y >= HEIGHT - 1)
-    {
-        game_over = true;
-    }
-    // Check if the snake has collided with itself
-    for (int i = 1; i < snake_size; i++)
-    {
-        if (snake[0].x == snake[i].x && snake[0].y == snake[i].y)
-        {
-            game_over = true;
-        }
-    }
-    // Check if the snake has collided with food
-    if (snake[0].x == food.x && snake[0].y == food.y)
-    {
-        // Increase the snake's length and score
-        snake_size++;
-        score++;
-        // Generate new food position
-        food.x = rand() % (WIDTH - 2) + 1;
-        food.y = rand() % (HEIGHT - 2) + 1;
-    }
-    // std::cout << glm::to_string(snake[0]) << " " << game_over << std::endl;
-    // std::cout << glm::to_string(food) << " " << game_over << std::endl;
-}
+#ifdef SNAKE_H
+Snake snake;
 #endif
 
 glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -152,10 +71,7 @@ glm::mat4 model = glm::mat4(1.0f);
 int main()
 {
     if (!init())
-        return -1;
-    #ifdef SNAKE
-    snake_init();
-    #endif
+        return -1;    
     Shader lightingShader("/res/shaders/colors.vs", "./res/shaders/colors.fs");
     Shader lightCubeShader("/res/shaders/lighting.vs", "/res/shaders/lighting.fs");
 
@@ -228,6 +144,11 @@ int main()
         {0.0f, 7.5f}
     };
     #endif
+
+    #ifdef SNAKE_H
+    snake.init();
+    #endif
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -253,9 +174,6 @@ int main()
         // const int s_i = (currentFrame / 0.25f - int(currentFrame / 0.25f / 10) * 10);
         // light.position = glm::vec3(skeleton[s_i], currentFrame + 1.0f);
         #endif
-        #ifdef SNAKE
-        light.position = {food.x, light.position.y, food.y};
-        #endif
 
         updateProjView(lightingShader);
         lightingShader.setInt("material.diffuse", 0);
@@ -272,6 +190,14 @@ int main()
         // bind diffuse map
         diffuse.bind(0);
         specular.bind(1);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(100.0f));
+        lightingShader.setMat4("model", model);
+
+        planeMesh.Draw();
+
 
         #ifdef SKELETON
         float left = currentFrame + sin(currentFrame);
@@ -304,40 +230,15 @@ int main()
         lightingShader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(skeleton[9], mid))); cubeMesh.Draw();
         #endif
         
-        #ifdef SNAKE
+        #ifdef SNAKE_H
+        if (!snake.isOvered()){
+            snake.draw_blocks(cubeMesh, lightingShader);
+            snake.draw_snake(cubeMesh, lightingShader);
 
-        if (!game_over) {
-            for (int i = 0; i < WIDTH; i++) {
-                model = glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0f, 0.0f));
-                lightingShader.setMat4("model", model); cubeMesh.Draw();
-                model = glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0f, HEIGHT - 1));
-                lightingShader.setMat4("model", model); cubeMesh.Draw();
-            }
-            for (int j = 1; j < HEIGHT - 1; j++) {
-                model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, j));
-                lightingShader.setMat4("model", model); cubeMesh.Draw();
-                model = glm::translate(glm::mat4(1.0f), glm::vec3(WIDTH - 1, 0.0f, j));
-                lightingShader.setMat4("model", model); cubeMesh.Draw();
-            }
-
-            for (int i = 0; i < snake_size; i++) {
-                model = glm::translate(glm::mat4(1.0f), glm::vec3(snake[i].x, 0.0f, snake[i].y));
-                lightingShader.setMat4("model", model); cubeMesh.Draw();
-            }
-
-            model = glm::translate(glm::mat4(1.0f), glm::vec3(food.x, 0.0f, food.y));
-            lightingShader.setMat4("model", model); cubeMesh.Draw();
+            updateProjView(lightCubeShader);
+            snake.draw_food(cubeMesh, lightCubeShader);
         }
-
         #endif
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-        model = glm::scale(model, glm::vec3(100.0f));
-        lightingShader.setMat4("model", model);
-
-        planeMesh.Draw();
-
 
 
         //Light cube
@@ -373,24 +274,20 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
-
-
-
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    #ifdef SNAKE
-    // glfwSetInputMode(window, GLFW_STICKY_KEYS, 1);
-    if (!game_over) {
+    #ifdef SNAKE_H
+    if (!snake.isOvered()){
         if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-            snake_update(FORWARD);
+            snake.update(S_FORWARD);
         if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-            snake_update(BACKWARD);
+            snake.update(S_BACKWARD);
         if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-            snake_update(LEFT);
+            snake.update(S_LEFT);
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-            snake_update(RIGHT);
+            snake.update(S_RIGHT);
     }
     #endif
 }
