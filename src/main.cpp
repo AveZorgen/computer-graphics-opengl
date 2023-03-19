@@ -72,8 +72,9 @@ int main()
 {
     if (!init())
         return -1;    
-    Shader lightingShader("/res/shaders/colors.vs", "./res/shaders/colors.fs");
+    Shader lightingShader("/res/shaders/textures.vs", "./res/shaders/textures.fs");
     Shader lightCubeShader("/res/shaders/lighting.vs", "/res/shaders/lighting.fs");
+    Shader coloredShader("/res/shaders/colored.vs", "/res/shaders/colored.fs");
 
     Mesh cubeMesh = {
         // positions          // normals           // texture coords
@@ -184,8 +185,6 @@ int main()
 
         lightingShader.setVec3("viewPos",  camera.Position);
 
-        lightingShader.setMat4("model", model);
-
 
         // bind diffuse map
         diffuse.bind(0);
@@ -233,10 +232,27 @@ int main()
         #ifdef SNAKE_H
         if (!snake.isOvered()){
             snake.draw_blocks(cubeMesh, lightingShader);
+
+
+            updateProjView(coloredShader);
+            coloredShader.setLight("light", light);
+            coloredShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+            coloredShader.setFloat("material.shininess", 32.0f);
+
+            coloredShader.setVec3("viewPos",  camera.Position);
+
+
+            glm::vec3 rgb = {0.5f, 1.0f, 0.31f};
+            coloredShader.setVec3("material.ambient", rgb);
+            coloredShader.setVec3("material.diffuse", rgb);
             snake.draw_snake(cubeMesh, lightingShader);
 
-            updateProjView(lightCubeShader);
-            snake.draw_food(cubeMesh, lightCubeShader);
+
+            rgb = {1.0f, 0.5f, 0.31f};
+            coloredShader.setVec3("material.ambient", rgb);
+            coloredShader.setVec3("material.diffuse", rgb);
+            
+            snake.draw_food(cubeMesh, coloredShader);
         }
         #endif
 
