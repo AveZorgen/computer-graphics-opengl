@@ -38,7 +38,7 @@ const unsigned int SCR_HEIGHT = 600;
 #ifdef SKELETON
 Camera camera(glm::vec3(0.0f, 10.0f, 15.0f));
 #else
-Camera camera(glm::vec3(10.0f, 25.0f, 10.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, -3.0f));
 #endif
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -67,6 +67,8 @@ Snake snake;
 glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 glm::mat4 view = camera.GetViewMatrix();
 glm::mat4 model = glm::mat4(1.0f);
+float s = 0.0f;
+long long int n = 0;
 
 int main()
 {
@@ -75,6 +77,7 @@ int main()
     Shader lightingShader("/res/shaders/textures.vs", "./res/shaders/textures.fs");
     Shader lightCubeShader("/res/shaders/lighting.vs", "/res/shaders/lighting.fs");
     Shader coloredShader("/res/shaders/colored.vs", "/res/shaders/colored.fs");
+    Shader raytracingShader("/res/shaders/raytracing.vs", "/res/shaders/raytracing.fs");
 
     Mesh cubeMesh = {
         // positions          // normals           // texture coords
@@ -127,6 +130,16 @@ int main()
         { 0, 1, 2, 2, 3, 0 }
     };
 
+    Mesh screenMesh = {
+        {
+            { {-1.0f, -1.0f, 0.0f} },
+            { { 1.0f, -1.0f, 0.0f} },
+            { { 1.0f,  1.0f, 0.0f} },
+            { {-1.0f,  1.0f, 0.0f} },
+        },
+        { 0, 1, 2, 2, 3, 0 }
+    };
+
     Texture diffuse, specular;
     diffuse.load("/res/container2.png");
     specular.load("/res/container2_specular.png");
@@ -157,12 +170,15 @@ int main()
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        s = s - (s - deltaTime) / (++n);
+        cout << 1.0f / s << endl;
 
         processInput(window);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        #if 0
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
 
@@ -264,9 +280,11 @@ int main()
         model = glm::translate(model, light.position);
         model = glm::scale(model, glm::vec3(0.2f));
         lightCubeShader.setMat4("model", model);
+        #endif
 
-        cubeMesh.Draw();
-
+        raytracingShader.use();
+        screenMesh.Draw();
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -359,13 +377,13 @@ int init() {
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, camera.scroll_callback);
-    glfwSetKeyCallback(window, key_callback);
+    // glfwSetCursorPosCallback(window, mouse_callback);
+    // glfwSetScrollCallback(window, camera.scroll_callback);
+    // glfwSetKeyCallback(window, key_callback);
 
 
     // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
