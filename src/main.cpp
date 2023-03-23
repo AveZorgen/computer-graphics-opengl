@@ -31,8 +31,8 @@ void updateProjView(const Shader& shader);
 
 // settings
 GLFWwindow* window;
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_HEIGHT = 1000;
+const unsigned int SCR_WIDTH = SCR_HEIGHT;
 
 // camera
 #ifdef SKELETON
@@ -171,7 +171,7 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         s = s - (s - deltaTime) / (++n);
-        cout << 1.0f / s << endl;
+        // cout << 1.0f / s << endl;
 
         processInput(window);
 
