@@ -117,13 +117,13 @@ void initializeDefaultScene(out STriangle triangles[10], out SSphere spheres[2])
     triangles[5].v3 = vec3(5.0, 5.0, 5.0);
     triangles[5].MaterialIdx = 2;
 
-    triangles[6].v1 = vec3(-5.0, -5.0, (5.0 - EPSILON) * sin(time));
-    triangles[6].v2 = vec3(5.0, -5.0, (5.0 - EPSILON) * sin(time));
-    triangles[6].v3 = vec3(-5.0, 5.0, (5.0 - EPSILON) * sin(time));
+    triangles[6].v1 = vec3(-5.0, -5.0, 1.0);
+    triangles[6].v2 = vec3(5.0, -5.0, 1.0);
+    triangles[6].v3 = vec3(-5.0, 5.0, 1.0);
     triangles[6].MaterialIdx = 4;
-    triangles[7].v1 = vec3(5.0, 5.0, (5.0 - EPSILON) * sin(time));
-    triangles[7].v2 = vec3(-5.0, 5.0, (5.0 - EPSILON) * sin(time));
-    triangles[7].v3 = vec3(5.0, -5.0, (5.0 - EPSILON) * sin(time));
+    triangles[7].v1 = vec3(5.0, 5.0, 1.0);
+    triangles[7].v2 = vec3(-5.0, 5.0, 1.0);
+    triangles[7].v3 = vec3(5.0, -5.0, 1.0);
     triangles[7].MaterialIdx = 4;
 
     /** SPHERES **/
