@@ -172,6 +172,7 @@ int main()
         lastFrame = currentFrame;
         s = s - (s - deltaTime) / (++n);
         // cout << 1.0f / s << endl;
+        // cout << 1.0f / deltaTime << endl;
 
         processInput(window);
 
@@ -283,6 +284,7 @@ int main()
         #endif
 
         raytracingShader.use();
+        raytracingShader.setFloat("time",glfwGetTime());
         screenMesh.Draw();
         
         glfwSwapBuffers(window);
