@@ -38,7 +38,7 @@ const unsigned int SCR_WIDTH = SCR_HEIGHT;
 #ifdef SKELETON
 Camera camera(glm::vec3(0.0f, 10.0f, 15.0f));
 #else
-Camera camera(glm::vec3(0.0f, 0.0f, -3.0f));
+Camera camera(glm::vec3(0.0, 0.0, 8.0f));
 #endif
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -285,6 +285,11 @@ int main()
 
         raytracingShader.use();
         raytracingShader.setFloat("time",glfwGetTime());
+        raytracingShader.setVec3("uCamera.Position", camera.Position);
+        raytracingShader.setVec3("uCamera.View", camera.Front);
+        raytracingShader.setVec3("uCamera.Up", camera.Up);
+        raytracingShader.setVec3("uCamera.Side", camera.Right);
+        raytracingShader.setVec2("uCamera.Scale", glm::vec2((float)SCR_WIDTH / (float)SCR_HEIGHT));
         screenMesh.Draw();
         
         glfwSwapBuffers(window);
@@ -379,13 +384,13 @@ int init() {
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
     // glfwSetScrollCallback(window, camera.scroll_callback);
     // glfwSetKeyCallback(window, key_callback);
 
 
     // tell GLFW to capture our mouse
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
