@@ -74,10 +74,10 @@ int main()
         processInput(window);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         raytracingShader.use();
-        raytracingShader.setFloat("time",glfwGetTime());
+        raytracingShader.setFloat("time", currentFrame);
         raytracingShader.setVec3("uCamera.Position", camera.Position);
         raytracingShader.setVec3("uCamera.View", camera.Front);
         raytracingShader.setVec3("uCamera.Up", camera.Up);
@@ -175,10 +175,6 @@ int init() {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-
-    // configure global opengl state
-    // -----------------------------
-    glEnable(GL_DEPTH_TEST);
 
     return true;
 }
