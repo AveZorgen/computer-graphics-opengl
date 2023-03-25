@@ -179,7 +179,7 @@ void initializeDefaultLightMaterials() {
     materials[4].MaterialType = REFRACTION;
 
     materials[5].Color = vec3(1.0, 1.0, 1.0);
-    materials[5].LightCoeffs = vec4(lightCoefs);
+    materials[5].LightCoeffs = vec4(1.0, 1.0, 1.0, 0);
     materials[5].ReflectionCoef = 0.0;
     materials[5].RefractionCoef = 0.0;
     materials[5].MaterialType = LIGHT;
@@ -387,6 +387,10 @@ void main(void) {
                     float contribution = trRay.contribution * intersect.ReflectionCoef;
                     trRay.ray = SRay(intersect.Point + refractDirection * EPSILON, refractDirection, ray.isShadow);
                     trRay.contribution = contribution;
+                    break;
+                }
+                case LIGHT: {
+                    trRay.ttl = 0;
                     break;
                 }
             }
