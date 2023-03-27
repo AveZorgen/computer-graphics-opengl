@@ -373,33 +373,25 @@ void main(void) {
             float contribution = trRay.contribution * (1 - intersect.ReflectionCoef);
             float shadowing = Shadow(light, intersect);
             resultColor += contribution * Phong(intersect, light, shadowing);
+            trRay.contribution = trRay.contribution * intersect.ReflectionCoef;
+            vec3 newDir = ray.Direction;
             switch (intersect.MaterialType){
                 case DIFFUSE: {}
                 case REFLECTION: {
-                    vec3 reflectDirection = reflect(ray.Direction, intersect.Normal);
-                    float contribution = trRay.contribution * intersect.ReflectionCoef;
-                    trRay.ray = SRay(intersect.Point + reflectDirection * EPSILON, reflectDirection, ray.isShadow);
-                    trRay.contribution = contribution;
+                    newDir = reflect(ray.Direction, intersect.Normal);
                     break;
                 }
                 case REFRACTION: {
-                    vec3 refractDirection = refract(ray.Direction, intersect.Normal, intersect.RefractionCoef);
-                    float contribution = trRay.contribution * intersect.ReflectionCoef;
-                    trRay.ray = SRay(intersect.Point + refractDirection * EPSILON, refractDirection, ray.isShadow);
-                    trRay.contribution = contribution;
-                    break;
-                }
-                case LIGHT: {
-                    trRay.ttl = 0;
+                    newDir = refract(ray.Direction, intersect.Normal, intersect.RefractionCoef);
                     break;
                 }
             }
+            trRay.ray = SRay(intersect.Point + newDir * EPSILON, newDir, ray.isShadow);
         }
         else {
             // resultColor = vec3(0.25f, 0.73f, 0.85f);
             // resultColor = vec3(1.0f);
             trRay.ttl = 0;
-            trRay.contribution = 0;
         }
     }
 
