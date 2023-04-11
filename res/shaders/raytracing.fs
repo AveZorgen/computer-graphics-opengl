@@ -41,6 +41,12 @@ struct STriangle {
     int MaterialIdx;
 };
 
+struct SBox {
+    vec3 pos; 
+    vec3 sz;
+    int MaterialIdx;
+};
+
 struct SIntersection {
     float Time;
     vec3 Point;
@@ -72,6 +78,7 @@ struct SMaterial {
 uniform SCamera uCamera;
 STriangle triangles[10];
 SSphere spheres[3];
+SBox boxes[1];
 SLight light;
 SMaterial materials[6];
 
@@ -140,6 +147,10 @@ void initializeDefaultScene() {
     spheres[2].Center = light.Position;
     spheres[2].Radius = 0.2;
     spheres[2].MaterialIdx = 5;
+
+    boxes[0].pos = vec3(3.0, -2.0, 6.0);
+    boxes[0].sz = vec3(1.5, 1.0, 2.0);
+    boxes[0].MaterialIdx = 1;
 }
 
 void initializeDefaultLightMaterials() {
@@ -267,6 +278,29 @@ bool IntersectTriangle(SRay ray, vec3 v1, vec3 v2, vec3 v3, out float time) {
 // this ray hits the triangle
 }
 
+bool IntersectBox(SRay ray, vec3 pos, vec3 sz, out float time, out vec3 outNormal) {
+    ray.Origin -= pos;
+    vec3 m = 1.0 / ray.Direction;
+    vec3 n = m * ray.Origin;
+    vec3 k = abs(m)*sz;
+    vec3 t1 = -n - k;
+    vec3 t2 = -n + k;
+    float tN = max( max( t1.x, t1.y ), t1.z );
+    float tF = min( min( t2.x, t2.y ), t2.z );
+    if( tN>tF || tF<0.0) 
+        return false;
+    if (tN > 0.0) {
+        outNormal = step(vec3(tN),t1);
+        time = tN;
+    }
+    else {
+        outNormal = step(t2,vec3(tF));
+        time = tF;
+    }
+    outNormal *= -sign(ray.Direction);
+    return true;
+}
+
 bool Raytrace(
     SRay ray,
     float start,
@@ -275,6 +309,7 @@ bool Raytrace(
 ) {
     bool result = false;
     float test = start;
+    vec3 N;
     intersect.Time = final;
 //calculate intersect with spheres
     for(int i = 0; i < 3; i++) {
@@ -315,6 +350,25 @@ bool Raytrace(
             intersect.ReflectionCoef = materials[triangle.MaterialIdx].ReflectionCoef;
             intersect.RefractionCoef = materials[triangle.MaterialIdx].RefractionCoef;
             intersect.MaterialType = materials[triangle.MaterialIdx].MaterialType;
+            result = true;
+        }
+    }
+    for(int i = 0; i < 1; i++) {
+        SBox box = boxes[i];
+        if(
+            IntersectBox(ray, box.pos, box.sz, test, N) && 
+            test < intersect.Time &&
+            !(ray.isShadow && (materials[box.MaterialIdx].MaterialType == REFRACTION ||
+                              (materials[box.MaterialIdx].MaterialType == LIGHT)))
+          ) {
+            intersect.Time = test;
+            intersect.Point = ray.Origin + ray.Direction * test;
+            intersect.Normal = normalize(N);
+            intersect.Color = materials[box.MaterialIdx].Color;
+            intersect.LightCoeffs = materials[box.MaterialIdx].LightCoeffs;
+            intersect.ReflectionCoef = materials[box.MaterialIdx].ReflectionCoef;
+            intersect.RefractionCoef = materials[box.MaterialIdx].RefractionCoef;
+            intersect.MaterialType = materials[box.MaterialIdx].MaterialType;
             result = true;
         }
     }
