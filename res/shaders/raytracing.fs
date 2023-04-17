@@ -2,6 +2,14 @@
 uniform float time;
 in vec3 glPosition;
 
+#define EPSILON 0.001
+#define BIG 1000000.0
+#define PI 3.14159265358979323846
+const int DIFFUSE = 1;
+const int REFLECTION = 2;
+const int REFRACTION = 3;
+const int LIGHT = 4;
+
 struct SCamera {
     vec3 Position;
     vec3 View;
@@ -22,13 +30,6 @@ struct STracingRay {
     int ttl;
 };
 
-#define EPSILON 0.001
-#define BIG 1000000.0
-const int DIFFUSE = 1;
-const int REFLECTION = 2;
-const int REFRACTION = 3;
-const int LIGHT = 4;
-
 struct SSphere {
     vec3 Center;
     float Radius;
@@ -44,6 +45,13 @@ struct STriangle {
 struct SBox {
     vec3 pos; 
     vec3 sz;
+    int MaterialIdx;
+};
+
+struct STetrahedron {
+    vec3 pos;
+    vec3 norm;
+    vec3 l1;
     int MaterialIdx;
 };
 
@@ -79,8 +87,20 @@ uniform SCamera uCamera;
 STriangle triangles[10];
 SSphere spheres[3];
 SBox boxes[1];
+STetrahedron tetrahedrons[3];
 SLight light;
 SMaterial materials[6];
+
+mat3 rotationAxisAngle( vec3 v, float angle )
+{
+    float s = sin( angle );
+    float c = cos( angle );
+    float ic = 1.0 - c;
+
+    return mat3( v.x*v.x*ic + c,     v.y*v.x*ic - s*v.z, v.z*v.x*ic + s*v.y,
+                 v.x*v.y*ic + s*v.z, v.y*v.y*ic + c,     v.z*v.y*ic - s*v.x,
+                 v.x*v.z*ic - s*v.y, v.y*v.z*ic + s*v.x, v.z*v.z*ic + c);
+}
 
 SRay GenerateRay() {
     vec2 coords = glPosition.xy * uCamera.Scale;
@@ -151,6 +171,21 @@ void initializeDefaultScene() {
     boxes[0].pos = vec3(3.0, -2.0, 6.0);
     boxes[0].sz = vec3(1.5, 1.0, 2.0);
     boxes[0].MaterialIdx = 1;
+
+    tetrahedrons[0].pos = vec3(3.0, -1.0, 6.0);
+    tetrahedrons[0].norm = vec3(0.0, 1.0, 0.0);
+    tetrahedrons[0].l1 = vec3(1.0, 0.0, 0.0);
+    tetrahedrons[0].MaterialIdx = 3;
+
+    tetrahedrons[1].pos = vec3(3.0, -1.0 + 0.8, 6.0);
+    tetrahedrons[1].norm = vec3(0.0, 1.0, 0.0);
+    tetrahedrons[1].l1 = vec3(0.75, 0.0, 0.0);
+    tetrahedrons[1].MaterialIdx = 3;
+
+    tetrahedrons[2].pos = vec3(3.0, -1.0 + 1.5, 6.0);
+    tetrahedrons[2].norm = vec3(0.0, 1.0, 0.0);
+    tetrahedrons[2].l1 = vec3(0.5, 0.0, 0.0);
+    tetrahedrons[2].MaterialIdx = 3;
 }
 
 void initializeDefaultLightMaterials() {
@@ -372,6 +407,41 @@ bool Raytrace(
             result = true;
         }
     }
+
+    for(int i = 0; i < 3; i++) {
+        STetrahedron tetrahedron = tetrahedrons[i];
+        vec3 v1 = tetrahedron.l1;
+        vec3 v2 = tetrahedron.pos + rotationAxisAngle(tetrahedron.norm, 2.0 * PI / 3.0) * v1;
+        vec3 v3 = tetrahedron.pos + rotationAxisAngle(tetrahedron.norm, -2.0 * PI / 3.0) * v1;
+        vec3 v4 = tetrahedron.pos + tetrahedron.norm * length(tetrahedron.l1) * 4.0 / 3.0;
+        v1 = v1 + tetrahedron.pos;
+        STriangle tetrahedron_tr[4];
+        tetrahedron_tr[0] = STriangle(v2, v1, v4, tetrahedron.MaterialIdx);
+        tetrahedron_tr[1] = STriangle(v3, v2, v4, tetrahedron.MaterialIdx);
+        tetrahedron_tr[2] = STriangle(v4, v1, v3, tetrahedron.MaterialIdx);
+        tetrahedron_tr[3] = STriangle(v1, v2, v3, tetrahedron.MaterialIdx);
+        for(int j = 0; j < 4; j++) {
+            STriangle triangle = tetrahedron_tr[j];
+            if(
+                IntersectTriangle(ray, triangle.v1, triangle.v2, triangle.v3, test) && 
+                test < intersect.Time &&
+                !(ray.isShadow && (materials[triangle.MaterialIdx].MaterialType == REFRACTION ||
+                                (materials[triangle.MaterialIdx].MaterialType == LIGHT)))
+            ) {
+                intersect.Time = test;
+                intersect.Point = ray.Origin + ray.Direction * test;
+                intersect.Normal = normalize(cross(triangle.v1 - triangle.v2, triangle.v3 - triangle.v2));
+                intersect.Normal = -sign(dot(intersect.Normal, ray.Direction)) * intersect.Normal;
+                intersect.Color = materials[triangle.MaterialIdx].Color;
+                intersect.LightCoeffs = materials[triangle.MaterialIdx].LightCoeffs;
+                intersect.ReflectionCoef = materials[triangle.MaterialIdx].ReflectionCoef;
+                intersect.RefractionCoef = materials[triangle.MaterialIdx].RefractionCoef;
+                intersect.MaterialType = materials[triangle.MaterialIdx].MaterialType;
+                result = true;
+            }
+        }
+    }
+
     return result;
 }
 
